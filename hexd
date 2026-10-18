@@ -1,0 +1,82 @@
+section .text
+global .start
+
+decode_nibble:
+    cmp al, '0'
+    jb .invalid
+
+    cmp al, '9'
+    jbe .decimal
+
+    cmp al, 'A'
+    jb .check_lowercase
+
+    cmp al, 'F'
+    jbe .uppercase
+
+.check_lowercase:
+    cmp al, 'a'
+    jb .invalid
+
+    cmp al, 'f'
+    ja .invalid
+
+    sub al, 'a'
+    add al, 10
+    clc
+    ret
+
+.decimal:
+    sub al, '0'
+    clc
+    ret
+
+.uppercase:
+    sub al, 'A'
+    add al, 10
+    clc
+    ret
+
+.invalid:
+    stc
+    ret
+
+.decode_byte:
+decode_byte:
+    call decode_nibble
+    jc .invalid
+
+    mov bl, al
+    shl bl, 4
+
+    mov al, dl
+    call decode_nibble
+    jc .invalid
+
+    or al, bl
+    clc
+    ret
+
+.invalid:
+    stc
+    ret
+
+decode_byte:
+    mov al, [rsi]
+    mov al, [rsi + 1]
+    call decode_nibble
+
+
+
+    mov al, [rsi]
+    call decode_nibble
+    mov bl, al
+    shl bl, 4
+    mov al, [rsi+1]
+    jc .invalid
+    
+    or al, bl
+    mov [rdi], al
+    clc
+    ret
+    jc .invalid
