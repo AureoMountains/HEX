@@ -1,5 +1,12 @@
 section .text
-global .start
+global decode_byte
+
+; Input:
+;   AL = hexadecimal character
+;
+; Output:
+;   AL = decoded nibble (0-15)
+;   CF = 0 if valid, 1 if invalid
 
 decode_nibble:
     cmp al, '0'
@@ -41,15 +48,23 @@ decode_nibble:
     stc
     ret
 
-.decode_byte:
+
+; Input:
+;   RSI = pointer to two hexadecimal characters
+;
+; Output:
+;   AL = decoded byte
+;   CF = 0 if valid, 1 if invalid
+
 decode_byte:
+    mov al, [rsi]
     call decode_nibble
     jc .invalid
 
     mov bl, al
     shl bl, 4
 
-    mov al, dl
+    mov al, [rsi + 1]
     call decode_nibble
     jc .invalid
 
@@ -60,23 +75,3 @@ decode_byte:
 .invalid:
     stc
     ret
-
-decode_byte:
-    mov al, [rsi]
-    mov al, [rsi + 1]
-    call decode_nibble
-
-
-
-    mov al, [rsi]
-    call decode_nibble
-    mov bl, al
-    shl bl, 4
-    mov al, [rsi+1]
-    jc .invalid
-    
-    or al, bl
-    mov [rdi], al
-    clc
-    ret
-    jc .invalid
